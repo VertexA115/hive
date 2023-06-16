@@ -1,4 +1,4 @@
-{nixpkgs}: let
+{ nixpkgs, self }: let
   l = nixpkgs.lib // builtins;
   evalModulesMinimal = nixpkgs.lib.nixos.evalModules;
 
@@ -85,6 +85,10 @@
 
   checkBeeAnd = tranform: locatedConfig: let
     checked = evalModulesMinimal {
+      specialArgs = {
+        inherit self;
+      };
+
       modules = [
         locatedConfig
         beeModule
@@ -124,6 +128,7 @@
       import (evaled.config.bee.pkgs.path + "/nixos/lib/eval-config.nix") {
         # signal to use nixpkgs.system before: https://github.com/NixOS/nixpkgs/pull/220743
         system = null;
+        specialArgs = {inherit self;};
         modules = [beeModule locatedConfig extraConfig extra];
       };
     bee =
@@ -157,6 +162,7 @@
     eval = extra:
       evaled.config.bee.darwin.lib.darwinSystem {
         inherit (evaled.config.bee) system pkgs;
+        specialArgs = {inherit self;};
         modules = [beeModule locatedConfig extraConfig extra];
       };
     bee =
@@ -184,6 +190,7 @@
     eval = extra:
       lib.evalModules {
         specialArgs = {
+          inherit self;
           modulesPath = l.toString (evaled.config.bee.home + /modules);
         };
         modules = [beeModule locatedConfig extra] ++ hmModules;
